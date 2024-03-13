@@ -1,25 +1,32 @@
 // Core
-import { Schema, model } from 'mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema, model } from 'mongoose';
+import mongooseUniqueValidator from 'mongoose-unique-validator';
 
-export interface IUser extends Document {
+// Helpers
+import bcrypt from 'bcrypt';
+
+export interface IUserModel extends Document {
   username: string;
-  password: string;
   email: string;
+  password: string;
+  createHashedPassword(password: string): string;
+  validPassword(password: string): boolean;
 }
 
-const userSchema = new Schema<IUser>(
+const UserSchema = new Schema<IUserModel>(
   {
     username: {
-      type: String,
-      required: true,
-    },
-    password: {
-      type: String,
+      type: Schema.Types.String,
+      unique: true,
       required: true,
     },
     email: {
-      type: String,
+      type: Schema.Types.String,
+      unique: true,
+      required: true,
+    },
+    password: {
+      type: Schema.Types.String,
       required: true,
     },
   },
@@ -28,4 +35,29 @@ const userSchema = new Schema<IUser>(
   },
 );
 
-export default model<IUser>('User', userSchema);
+UserSchema.methods.toJSON = function () {
+  return {
+    id: this._id,
+    username: this.username,
+    email: this.email,
+  };
+};
+
+UserSchema.methods.createHashedPassword = function (password: string): string {
+  const salt = bcrypt.genSaltSync(6);
+  return bcrypt.hashSync(password, salt);
+};
+
+UserSchema.methods.validPassword = function (password: string): boolean {
+  return bcrypt.compareSync(password, this.password);
+};
+
+UserSchema.plugin(mongooseUniqueValidator, { message: 'must be unique' });
+
+UserSchema.pre('save', async function (next) {
+  this.password = this.createHashedPassword(this.password);
+
+  next();
+});
+
+export default model<IUserModel>('User', UserSchema);

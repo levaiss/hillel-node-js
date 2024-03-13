@@ -49,6 +49,15 @@ export class BadRequestError extends CustomError {
   }
 }
 
+export class ForbiddenError extends CustomError {
+  constructor(message: string = 'Access to the requested resource is forbidden', data?: unknown) {
+    super(message, data);
+
+    this.code = RequestStatusCodes.Forbidden;
+    this.name = 'ForbiddenError';
+  }
+}
+
 export class InternalServerError extends CustomError {
   constructor(message: string, data?: unknown) {
     super(message, data);

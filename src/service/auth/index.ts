@@ -1,10 +1,9 @@
 // Core
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 
 // Models
-import UserModel, { IUser } from '../database/model/user.model';
+import UserModel, { IUserModel } from '../database/model/user.model';
 
 // Helpers
 import { accessTokenSecretKey, refreshTokenSecretKey } from '../../config/jwt.config';
@@ -59,7 +58,7 @@ export default class AuthService {
     });
   }
 
-  static createAccessToken(user: IUser): string {
+  static createAccessToken(user: IUserModel): string {
     const { username, _id: userId } = user;
 
     return `Bearer ${jwt.sign(
@@ -72,7 +71,7 @@ export default class AuthService {
     )}`;
   }
 
-  static createRefreshToken(user: IUser): string {
+  static createRefreshToken(user: IUserModel): string {
     const { username, _id: userId } = user;
 
     return `Bearer ${jwt.sign(
@@ -83,14 +82,5 @@ export default class AuthService {
       refreshTokenSecretKey,
       { expiresIn: '7d' },
     )}`;
-  }
-
-  static async createHashedPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(6);
-    return await bcrypt.hash(password, salt);
-  }
-
-  static comparePassword(hashedPassword: string, password: string): boolean {
-    return bcrypt.compareSync(password, hashedPassword);
   }
 }
